@@ -8,14 +8,30 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Calendar, MapPin, Ruler, Heart } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { getPetById } from "@/lib/pets"
-import type { Pet } from "@/types/pet"
+import { useSession } from "next-auth/react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertCircle, Check } from "lucide-react"
 
 export default function PetDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const [pet, setPet] = useState<Pet | null>(null)
+  const { data: session, status } = useSession()
+  const [pet, setPet] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
+  const [adoptionDialogOpen, setAdoptionDialogOpen] = useState(false)
+  const [adoptionMessage, setAdoptionMessage] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle")
+  const [errorMessage, setErrorMessage] = useState("")
 
   useEffect(() => {
     const fetchPet = async () => {
@@ -25,11 +41,13 @@ export default function PetDetailPage() {
       }
 
       try {
-        const petData = await getPetById(params.id)
-        if (!petData) {
-          router.push("/mascotas")
-          return
+        const response = await fetch(`/api/pets/${params.id}`)
+
+        if (!response.ok) {
+          throw new Error("Error al obtener la mascota")
         }
+
+        const petData = await response.json()
         setPet(petData)
       } catch (error) {
         console.error("Error fetching pet:", error)
@@ -41,6 +59,62 @@ export default function PetDetailPage() {
 
     fetchPet()
   }, [params.id, router])
+
+  const handleAdoptionRequest = async () => {
+    if (!session) {
+      // Redirect to login
+      router.push("/api/auth/signin")
+      return
+    }
+
+    setAdoptionDialogOpen(true)
+  }
+
+  const submitAdoptionRequest = async () => {
+    if (!session || !pet) return
+
+    setSubmitting(true)
+    setSubmitStatus("idle")
+    setErrorMessage("")
+
+    try {
+      const response = await fetch("/api/adoption-requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          petId: pet._id,
+          mensaje: adoptionMessage,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Error al enviar la solicitud")
+      }
+
+      setSubmitStatus("success")
+
+      // Update pet status locally
+      setPet({
+        ...pet,
+        estado: "en_proceso",
+      })
+
+      // Close dialog after 2 seconds
+      setTimeout(() => {
+        setAdoptionDialogOpen(false)
+      }, 2000)
+    } catch (error) {
+      console.error("Error submitting adoption request:", error)
+      setSubmitStatus("error")
+      setErrorMessage(error instanceof Error ? error.message : "Error al enviar la solicitud")
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -81,9 +155,15 @@ export default function PetDetailPage() {
             className="object-cover"
             priority
           />
-          {pet.estado === "adoptado" && (
+          {pet.estado !== "disponible" && (
             <div className="absolute top-4 right-4">
-              <Badge className="bg-green-500 text-white text-lg py-1 px-3">Adoptado</Badge>
+              <Badge
+                className={`text-white text-lg py-1 px-3 ${
+                  pet.estado === "adoptado" ? "bg-green-500" : "bg-yellow-500"
+                }`}
+              >
+                {pet.estado === "adoptado" ? "Adoptado" : "En proceso"}
+              </Badge>
             </div>
           )}
         </div>
@@ -145,14 +225,24 @@ export default function PetDetailPage() {
 
           {pet.estado === "disponible" ? (
             <div className="space-y-4">
-              <Button className="w-full bg-yellow-400 hover:bg-yellow-500 text-navy-blue">Solicitar adopción</Button>
+              <Button
+                className="w-full bg-yellow-400 hover:bg-yellow-500 text-navy-blue"
+                onClick={handleAdoptionRequest}
+                disabled={status === "loading"}
+              >
+                Solicitar adopción
+              </Button>
               <p className="text-sm text-gray-500 text-center">
                 Al solicitar la adopción, nuestro equipo se pondrá en contacto contigo para iniciar el proceso.
               </p>
             </div>
           ) : (
             <div className="bg-gray-100 p-4 rounded-lg text-center">
-              <p className="text-gray-600">Esta mascota ya ha sido adoptada. ¡Hay muchas más esperando un hogar!</p>
+              <p className="text-gray-600">
+                {pet.estado === "adoptado"
+                  ? "Esta mascota ya ha sido adoptada. ¡Hay muchas más esperando un hogar!"
+                  : "Esta mascota está en proceso de adopción. ¡Hay muchas más esperando un hogar!"}
+              </p>
               <Link href="/mascotas">
                 <Button variant="link" className="text-navy-blue mt-2">
                   Ver otras mascotas
@@ -162,6 +252,60 @@ export default function PetDetailPage() {
           )}
         </div>
       </div>
+
+      <Dialog open={adoptionDialogOpen} onOpenChange={setAdoptionDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Solicitud de adopción para {pet.nombre}</DialogTitle>
+            <DialogDescription>
+              Cuéntanos por qué quieres adoptar a {pet.nombre} y cómo sería su nuevo hogar.
+            </DialogDescription>
+          </DialogHeader>
+
+          {submitStatus === "success" ? (
+            <Alert className="bg-green-50 border-green-200">
+              <Check className="h-4 w-4 text-green-600" />
+              <AlertTitle className="text-green-800">¡Solicitud enviada!</AlertTitle>
+              <AlertDescription className="text-green-700">
+                Tu solicitud ha sido enviada correctamente. Te contactaremos pronto.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <>
+              {submitStatus === "error" && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{errorMessage || "Ha ocurrido un error al enviar la solicitud."}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="py-4">
+                <Textarea
+                  placeholder="Describe por qué quieres adoptar a esta mascota, tu experiencia con mascotas, y cómo sería su nuevo hogar..."
+                  value={adoptionMessage}
+                  onChange={(e) => setAdoptionMessage(e.target.value)}
+                  rows={6}
+                  className="resize-none"
+                />
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setAdoptionDialogOpen(false)} disabled={submitting}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={submitAdoptionRequest}
+                  disabled={!adoptionMessage.trim() || submitting}
+                  className="bg-yellow-400 hover:bg-yellow-500 text-navy-blue"
+                >
+                  {submitting ? "Enviando..." : "Enviar solicitud"}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

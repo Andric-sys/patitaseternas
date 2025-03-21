@@ -7,18 +7,23 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { AuthButton } from "./auth-button"
+import { useSession } from "next-auth/react"
 
 const navItems = [
   { label: "Inicio", href: "/" },
   { label: "Mascotas", href: "/mascotas" },
   { label: "Sobre Nosotros", href: "/sobre-nosotros" },
   { label: "Contacto", href: "/contacto" },
-  { label: "Admin", href: "/admin" },
 ]
 
 export default function Navbar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const { data: session } = useSession()
+
+  // Add admin link if user is logged in
+  const navItemsWithAdmin = session ? [...navItems, { label: "Admin", href: "/admin" }] : navItems
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
@@ -32,7 +37,7 @@ export default function Navbar() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
-          {navItems.map((item) => (
+          {navItemsWithAdmin.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -44,7 +49,10 @@ export default function Navbar() {
               {item.label}
             </Link>
           ))}
-          <Button className="bg-yellow-400 hover:bg-yellow-500 text-navy-blue">Adoptar</Button>
+          <Link href="/mascotas">
+            <Button className="bg-yellow-400 hover:bg-yellow-500 text-navy-blue mr-4">Adoptar</Button>
+          </Link>
+          <AuthButton />
         </nav>
 
         {/* Mobile Navigation */}
@@ -68,7 +76,7 @@ export default function Navbar() {
                 </Button>
               </div>
               <nav className="flex flex-col gap-4 py-6">
-                {navItems.map((item) => (
+                {navItemsWithAdmin.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
@@ -82,7 +90,7 @@ export default function Navbar() {
                   </Link>
                 ))}
               </nav>
-              <div className="mt-auto pb-6">
+              <div className="mt-auto pb-6 flex flex-col gap-4">
                 <Button
                   className="w-full bg-yellow-400 hover:bg-yellow-500 text-navy-blue"
                   onClick={() => {
@@ -92,6 +100,9 @@ export default function Navbar() {
                 >
                   Adoptar
                 </Button>
+                <div className="flex justify-center">
+                  <AuthButton />
+                </div>
               </div>
             </div>
           </SheetContent>
