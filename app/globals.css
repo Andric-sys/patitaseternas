@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --navy-blue: #0a2463;
+  --yellow: #f9c22e;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -13,10 +18,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 210 100% 20%; /* Azul marino */
+    --primary: 221 73% 22%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 47 100% 50%; /* Amarillo */
+    --secondary: 47 96% 58%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
@@ -45,10 +50,10 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 100% 30%; /* Azul marino más claro para dark mode */
+    --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 47 100% 50%; /* Amarillo */
+    --secondary: 47 96% 58%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
@@ -73,5 +78,29 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.text-navy-blue {
+  color: var(--navy-blue);
+}
+
+.bg-navy-blue {
+  background-color: var(--navy-blue);
+}
+
+.text-yellow-400 {
+  color: var(--yellow);
+}
+
+.bg-yellow-400 {
+  background-color: var(--yellow);
+}
+
+.hover\:bg-yellow-500:hover {
+  background-color: #e6b429;
+}
+
+.border-navy-blue {
+  border-color: var(--navy-blue);
 }
 

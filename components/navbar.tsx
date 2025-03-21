@@ -2,70 +2,102 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { PawPrint, Menu, X, LogIn } from "lucide-react"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Menu, X } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-export function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+const navItems = [
+  { label: "Inicio", href: "/" },
+  { label: "Mascotas", href: "/mascotas" },
+  { label: "Sobre Nosotros", href: "/sobre-nosotros" },
+  { label: "Contacto", href: "/contacto" },
+  { label: "Admin", href: "/admin" },
+]
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen)
-  }
+export default function Navbar() {
+  const pathname = usePathname()
+  const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <nav className="bg-primary text-primary-foreground py-4 px-6 shadow-md">
-      <div className="container mx-auto flex justify-between items-center">
-        <Link href="/" className="flex items-center space-x-2">
-          <PawPrint className="h-8 w-8 text-secondary" />
-          <span className="text-xl font-bold">Patitas Eternas</span>
-        </Link>
+    <header className="sticky top-0 z-50 w-full border-b bg-white">
+      <div className="container mx-auto px-4 flex h-16 items-center justify-between">
+        <div className="flex items-center">
+          <Link href="/" className="flex items-center">
+            <span className="text-2xl font-bold text-navy-blue">Patitas</span>
+            <span className="text-2xl font-bold text-yellow-400">Eternas</span>
+          </Link>
+        </div>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-6">
-          <Link href="/" className="hover:text-secondary transition-colors">
-            Inicio
-          </Link>
-          <Link href="/mascotas" className="hover:text-secondary transition-colors">
-            Mascotas
-          </Link>
-          <Link href="/nosotros" className="hover:text-secondary transition-colors">
-            Sobre Nosotros
-          </Link>
-          <Link href="/contacto" className="hover:text-secondary transition-colors">
-            Contacto
-          </Link>
-          <Button variant="outline" className="bg-secondary text-primary hover:bg-secondary/90">
-            <LogIn className="mr-2 h-4 w-4" /> Iniciar Sesión
-          </Button>
-        </div>
+        <nav className="hidden md:flex items-center gap-6">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-navy-blue",
+                pathname === item.href ? "text-navy-blue" : "text-gray-500",
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
+          <Button className="bg-yellow-400 hover:bg-yellow-500 text-navy-blue">Adoptar</Button>
+        </nav>
 
-        {/* Mobile Menu Button */}
-        <button className="md:hidden" onClick={toggleMenu}>
-          {isMenuOpen ? <X className="h-6 w-6 text-secondary" /> : <Menu className="h-6 w-6 text-secondary" />}
-        </button>
+        {/* Mobile Navigation */}
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetTrigger asChild className="md:hidden">
+            <Button variant="ghost" size="icon">
+              <Menu className="h-6 w-6" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+            <div className="flex flex-col h-full">
+              <div className="flex items-center justify-between border-b py-4">
+                <div className="flex items-center">
+                  <span className="text-xl font-bold text-navy-blue">Patitas</span>
+                  <span className="text-xl font-bold text-yellow-400">Eternas</span>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+                  <X className="h-5 w-5" />
+                  <span className="sr-only">Close menu</span>
+                </Button>
+              </div>
+              <nav className="flex flex-col gap-4 py-6">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsOpen(false)}
+                    className={cn(
+                      "text-base font-medium transition-colors hover:text-navy-blue px-2 py-1",
+                      pathname === item.href ? "text-navy-blue bg-gray-100 rounded-md" : "text-gray-500",
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+              <div className="mt-auto pb-6">
+                <Button
+                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-navy-blue"
+                  onClick={() => {
+                    setIsOpen(false)
+                    window.location.href = "/mascotas"
+                  }}
+                >
+                  Adoptar
+                </Button>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
-
-      {/* Mobile Navigation */}
-      {isMenuOpen && (
-        <div className="md:hidden container mx-auto mt-4 pb-4 flex flex-col space-y-4">
-          <Link href="/" className="hover:text-secondary transition-colors" onClick={toggleMenu}>
-            Inicio
-          </Link>
-          <Link href="/mascotas" className="hover:text-secondary transition-colors" onClick={toggleMenu}>
-            Mascotas
-          </Link>
-          <Link href="/nosotros" className="hover:text-secondary transition-colors" onClick={toggleMenu}>
-            Sobre Nosotros
-          </Link>
-          <Link href="/contacto" className="hover:text-secondary transition-colors" onClick={toggleMenu}>
-            Contacto
-          </Link>
-          <Button variant="outline" className="bg-secondary text-primary hover:bg-secondary/90 w-full">
-            <LogIn className="mr-2 h-4 w-4" /> Iniciar Sesión
-          </Button>
-        </div>
-      )}
-    </nav>
+    </header>
   )
 }
 

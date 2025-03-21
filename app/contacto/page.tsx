@@ -1,166 +1,226 @@
-import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
+"use client"
+
+import type React from "react"
+
+import { useState, type FormEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
-import { Mail, Phone, MapPin, Send } from "lucide-react"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Check, Mail, MapPin, Phone } from "lucide-react"
+import { sendContactForm } from "@/lib/contact"
 
-export default function ContactoPage() {
+export default function ContactPage() {
+  const [formData, setFormData] = useState({
+    nombre: "",
+    email: "",
+    telefono: "",
+    asunto: "",
+    mensaje: "",
+  })
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle")
+  const [errorMessage, setErrorMessage] = useState("")
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSelectChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, asunto: value }))
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setSubmitStatus("idle")
+    setErrorMessage("")
+
+    try {
+      // Validate form
+      if (!formData.nombre || !formData.email || !formData.asunto || !formData.mensaje) {
+        throw new Error("Por favor completa todos los campos obligatorios")
+      }
+
+      // Send contact form
+      await sendContactForm(formData)
+
+      // Reset form
+      setFormData({
+        nombre: "",
+        email: "",
+        telefono: "",
+        asunto: "",
+        mensaje: "",
+      })
+
+      setSubmitStatus("success")
+    } catch (error) {
+      console.error("Error sending contact form:", error)
+      setSubmitStatus("error")
+      setErrorMessage(error instanceof Error ? error.message : "Error al enviar el formulario")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-navy-blue mb-6">Contacto</h1>
 
-      <main className="flex-grow">
-        {/* Header */}
-        <section className="bg-primary py-12 text-white">
-          <div className="container mx-auto px-6">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">Contáctanos</h1>
-            <p className="text-lg max-w-2xl">
-              ¿Tienes preguntas sobre adopción, donaciones o quieres ser voluntario? Estamos aquí para ayudarte.
-            </p>
-          </div>
-        </section>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Envíanos un mensaje</CardTitle>
+              <CardDescription>
+                Completa el formulario y nos pondremos en contacto contigo lo antes posible
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSubmit}>
+              <CardContent className="space-y-6">
+                {submitStatus === "success" && (
+                  <Alert className="bg-green-50 border-green-200">
+                    <Check className="h-4 w-4 text-green-600" />
+                    <AlertTitle className="text-green-800">¡Mensaje enviado!</AlertTitle>
+                    <AlertDescription className="text-green-700">
+                      Hemos recibido tu mensaje. Te responderemos lo antes posible.
+                    </AlertDescription>
+                  </Alert>
+                )}
 
-        {/* Contact Form and Info */}
-        <section className="py-16">
-          <div className="container mx-auto px-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              {/* Contact Form */}
-              <div>
-                <h2 className="text-2xl font-bold mb-6 text-primary">Envíanos un mensaje</h2>
-                <Card>
-                  <CardContent className="p-6">
-                    <form className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <Label htmlFor="nombre">Nombre</Label>
-                          <Input id="nombre" placeholder="Tu nombre" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="email">Email</Label>
-                          <Input id="email" type="email" placeholder="tu@email.com" />
-                        </div>
-                      </div>
+                {submitStatus === "error" && (
+                  <Alert variant="destructive">
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{errorMessage || "Ha ocurrido un error al enviar el mensaje."}</AlertDescription>
+                  </Alert>
+                )}
 
-                      <div className="space-y-2">
-                        <Label htmlFor="asunto">Asunto</Label>
-                        <Select>
-                          <SelectTrigger id="asunto">
-                            <SelectValue placeholder="Selecciona un asunto" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="adopcion">Información sobre adopción</SelectItem>
-                            <SelectItem value="donacion">Donaciones</SelectItem>
-                            <SelectItem value="voluntariado">Voluntariado</SelectItem>
-                            <SelectItem value="pagos">Información sobre pagos</SelectItem>
-                            <SelectItem value="otro">Otro</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="nombre">Nombre completo *</Label>
+                    <Input id="nombre" name="nombre" value={formData.nombre} onChange={handleInputChange} required />
+                  </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="mensaje">Mensaje</Label>
-                        <Textarea id="mensaje" placeholder="Escribe tu mensaje aquí..." rows={6} />
-                      </div>
-
-                      <Button type="submit" className="w-full bg-secondary text-primary hover:bg-secondary/90">
-                        <Send className="mr-2 h-4 w-4" /> Enviar Mensaje
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Contact Info */}
-              <div>
-                <h2 className="text-2xl font-bold mb-6 text-primary">Información de Contacto</h2>
-
-                <div className="space-y-8">
-                  <Card>
-                    <CardContent className="p-6 flex items-start space-x-4">
-                      <div className="bg-primary/10 p-3 rounded-full">
-                        <Mail className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-lg mb-1">Email</h3>
-                        <p className="text-gray-600">info@patitaseternas.com</p>
-                        <p className="text-gray-600">adopciones@patitaseternas.com</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-6 flex items-start space-x-4">
-                      <div className="bg-primary/10 p-3 rounded-full">
-                        <Phone className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-lg mb-1">Teléfono</h3>
-                        <p className="text-gray-600">+123 456 7890 (General)</p>
-                        <p className="text-gray-600">+123 456 7891 (Adopciones)</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-6 flex items-start space-x-4">
-                      <div className="bg-primary/10 p-3 rounded-full">
-                        <MapPin className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-lg mb-1">Dirección</h3>
-                        <p className="text-gray-600">
-                          Calle Principal #123
-                          <br />
-                          Ciudad, Estado
-                          <br />
-                          Código Postal 12345
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <div className="mt-8">
-                    <h3 className="font-semibold text-lg mb-4">Horario de Atención</h3>
-                    <div className="space-y-2 text-gray-600">
-                      <div className="flex justify-between">
-                        <span>Lunes - Viernes:</span>
-                        <span>9:00 AM - 6:00 PM</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Sábado:</span>
-                        <span>10:00 AM - 4:00 PM</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Domingo:</span>
-                        <span>Cerrado</span>
-                      </div>
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Correo electrónico *</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* Map Section */}
-        <section className="py-12 bg-gray-50">
-          <div className="container mx-auto px-6">
-            <h2 className="text-2xl font-bold mb-8 text-primary text-center">Encuéntranos</h2>
-            <div className="h-96 bg-gray-300 rounded-lg overflow-hidden">
-              {/* Aquí iría un mapa real, pero usamos un placeholder */}
-              <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                <p className="text-gray-500">Mapa de ubicación</p>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="telefono">Teléfono</Label>
+                    <Input
+                      id="telefono"
+                      name="telefono"
+                      type="tel"
+                      value={formData.telefono}
+                      onChange={handleInputChange}
+                    />
+                  </div>
 
-      <Footer />
+                  <div className="space-y-2">
+                    <Label htmlFor="asunto">Asunto *</Label>
+                    <Select value={formData.asunto} onValueChange={handleSelectChange} required>
+                      <SelectTrigger id="asunto">
+                        <SelectValue placeholder="Seleccionar asunto" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="adopcion">Información sobre adopción</SelectItem>
+                        <SelectItem value="publicacion">Publicar una mascota</SelectItem>
+                        <SelectItem value="voluntariado">Voluntariado</SelectItem>
+                        <SelectItem value="donacion">Donaciones</SelectItem>
+                        <SelectItem value="otro">Otro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="mensaje">Mensaje *</Label>
+                  <Textarea
+                    id="mensaje"
+                    name="mensaje"
+                    value={formData.mensaje}
+                    onChange={handleInputChange}
+                    rows={5}
+                    required
+                  />
+                </div>
+              </CardContent>
+
+              <CardFooter className="flex justify-end">
+                <Button
+                  type="submit"
+                  className="bg-yellow-400 hover:bg-yellow-500 text-navy-blue"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Enviando..." : "Enviar mensaje"}
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
+        </div>
+
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Información de contacto</CardTitle>
+              <CardDescription>Otras formas de ponerte en contacto con nosotros</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-start">
+                <Mail className="h-5 w-5 text-yellow-500 mr-3 mt-0.5" />
+                <div>
+                  <p className="font-medium text-navy-blue">Correo electrónico</p>
+                  <p className="text-gray-600">contacto@patitaseternas.com</p>
+                </div>
+              </div>
+
+              <div className="flex items-start">
+                <Phone className="h-5 w-5 text-yellow-500 mr-3 mt-0.5" />
+                <div>
+                  <p className="font-medium text-navy-blue">Teléfono</p>
+                  <p className="text-gray-600">+52 123 456 7890</p>
+                </div>
+              </div>
+
+              <div className="flex items-start">
+                <MapPin className="h-5 w-5 text-yellow-500 mr-3 mt-0.5" />
+                <div>
+                  <p className="font-medium text-navy-blue">Ubicación</p>
+                  <p className="text-gray-600">
+                    Av. Ejemplo 123
+                    <br />
+                    Col. Centro
+                    <br />
+                    Ciudad de México, CP 12345
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t">
+                <p className="font-medium text-navy-blue mb-2">Horario de atención</p>
+                <p className="text-gray-600">Lunes a Viernes: 9:00 - 18:00</p>
+                <p className="text-gray-600">Sábados: 10:00 - 14:00</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }
