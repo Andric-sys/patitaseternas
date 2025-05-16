@@ -1,0 +1,100 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Patitas Eternas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <header>
+        <h1>Somos Patitas Eternas</h1>
+        <p>adopciones, rescates y mucho más</p>
+    </header>
+
+    <center>
+
+        <section id="sobre-mi">
+            <img src="img/logo.png" alt="PatitasEternas" class="profile-image" />
+            <h1>SOBRE NOSOTROS</h1>
+            <h2>Somos apasionados por los perritos y gatitos que estan en situaciones difíciles.</h2>
+            <p>Nos dedicamos a ayudar a los animales que más lo necesitan, brindándoles un hogar y amor.</p>
+
+        </section>
+
+    </center>
+
+    <center>
+        <section id="adoptables">
+            <h2>Adoptables</h2>
+            <div class="cards-container">
+                <div class="card">
+                    <img src="img/1.jpg" alt="">
+                    <h3>Pelusa</h3>
+                    <p>Pelusa es una perrita de 2 años, muy cariñosa y juguetona. Busca un hogar lleno de amor.</p>
+                    <button class="button"
+                        onclick="window.open('https://www.instagram.com/p/CxG1g0vL2rX/', '_blank')">Ver</button>
+
+                </div>
+                <div class="card">
+                    <img src="img/2.jpg" alt="">
+                    <h3>Copo de Nieve</h3>
+                    <p>Copo de Nieve es un perrito de 1 año, muy curioso y juguetón. Busca un hogar lleno de aventuras.</p>
+                    <button class="button"
+                        onclick="window.open('https://andric-sys.github.io/PlantillaXV/', '_blank')">Ver</button>
+                </div>
+                <div class="card">
+                    <img src="img/3.jpg" alt="Setup Streaming">
+                    <h3>Mortadella</h3>
+                    <p>Mortadella es un gatito de 3 años, muy tranquilo y cariñoso. Busca un hogar donde le den mucho amor.</p>
+                </div>
+            </div>
+            <br>
+        </section>
+
+        <h3>¿Quieres saber más sobre nosotros?</h3>
+        <p>¡No dudes en contactarnos! Estamos aquí para ayudarte.</p>
+        <button id="btn-contacto">Contactanos</button>
+
+    </center>
+
+
+
+
+    <footer>
+        <p>© 2025 Patitas Eternas. Todos los derechos reservados.</p>
+    </footer>
+
+
+    <div id="modal-contacto" class="modal">
+        <div class="modal-contenido">
+            <span class="cerrar" id="cerrar-modal">&times;</span>
+            <h2>Contáctame</h2>
+            <form id="contactForm">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" name="nombre" required>
+
+                <label for="email">Correo electrónico:</label>
+                <input type="email" id="correo" name="correo" required>
+
+                <label for="mensaje">Mensaje:</label>
+                <textarea id="mensaje" name="mensaje" required></textarea>
+
+                <button type="submit">Enviar</button>
+            </form>
+            <div id="respuesta" style="margin-top: 10px; color: green;"></div>
+
+        </div>
+    </div>
+    <!-- Cargar la librería con defer para asegurar que se defina antes -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
+    <script src="index.js" defer></script>
+
+</body>
+
+</html>
